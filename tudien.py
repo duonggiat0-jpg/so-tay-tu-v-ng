@@ -62,7 +62,7 @@ with tab2:
         st.session_state.game_tu_khoa = random.choice(list(kho_tu_du_phong.keys()))
         # Tạo 3 đáp án ngẫu nhiên làm mồi nhử
         nghia_dung = kho_tu_du_phong[st.session_state.game_tu_khoa]
-        cac_nghia_khac = [v for k, v in kho_tu_du_phong.items() if v != nghia_dung]
+        cac_nghia_khac = list(set([v for k, v in kho_tu_du_phong.items() if v != nghia_dung]))
         dap_an_tron = [nghia_dung] + random.sample(cac_nghia_khac, min(2, len(cac_nghia_khac)))
         random.shuffle(dap_an_tron)
         st.session_state.dap_an_options = dap_an_tron
@@ -70,9 +70,9 @@ with tab2:
 
     st.info(f"Từ vựng xuất hiện: 🔥 **{st.session_state.game_tu_khoa}**")
     
-    # Hiển thị các nút bấm đáp án
-    for lua_chon in st.session_state.dap_an_options:
-        if st.button(f"📍 {lua_chon.upper()}", use_container_width=True):
+    # Hiển thị các nút bấm đáp án có gắn khóa 'key' chống trùng lặp ID
+    for idx, lua_chon in enumerate(st.session_state.dap_an_options):
+        if st.button(f"📍 {lua_chon.upper()}", use_container_width=True, key=f"btn_{idx}_{lua_chon}"):
             if lua_chon == kho_tu_du_phong[st.session_state.game_tu_khoa]:
                 st.session_state.game_ket_qua = "dung"
             else:
