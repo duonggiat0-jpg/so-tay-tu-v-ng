@@ -1,39 +1,70 @@
 import streamlit as st
-import pandas as pd
+import random
 
-# 1. Cấu hình giao diện trang web
-st.set_page_config(page_title="Sổ Tay Từ Vựng Của Tôi", page_icon="📝", layout="wide")
-st.title("📝 Sổ Tay Từ Vựng & Nghĩa Tiếng Việt")
-st.write("Tự nhập từ vựng nước ngoài và định nghĩa nghĩa tiếng Việt của bạn vào bảng dưới đây.")
+# 1. Cấu hình giao diện trang web kiểm tra từ vựng
+st.set_page_config(page_title="App Kiểm Tra Từ Vựng", page_icon="🧠", layout="centered")
+st.title("🧠 Ứng Dụng Kiểm Tra Từ Vựng")
+st.write("Học và kiểm tra từ vựng ngẫu nhiên để tăng khả năng ghi nhớ.")
 
 st.divider()
 
-# Tạo ô nhập tổng số từ vựng ban đầu
-st.subheader("📋 Danh sách từ vựng của bạn")
-st.info("💡 MẸO: Bạn hãy bấm vào nút [➕ Add row] ở góc dưới bên trái của bảng để thêm một dòng mới. Sau đó bấm đúp chuột vào ô để tự gõ Từ vựng và Nghĩa tương ứng.")
-
-# Tạo cấu trúc bảng gồm 3 cột sạch lỗi font
-df_trong = pd.DataFrame(columns=["Từ vựng (Nước Ngoài)", "Thuộc Ngôn Ngữ", "Nghĩa Tiếng Việt (Bạn tự ghi)"])
-
-# Hiển thị bảng cho phép người dùng tự bấm nút thêm dòng, tự gõ chữ trực tiếp trên web
-danh_sach_tu = st.data_editor(
-    df_trong,
-    num_rows="dynamic", # Cho phép tự do bấm nút thêm/xóa dòng thoải mái
-    use_container_width=True,
-    column_config={
-        "Từ vựng (Nước Ngoài)": st.column_config.TextColumn(),
-        "Thuộc Ngôn Ngữ": st.column_config.SelectboxColumn(options=["Tiếng Hàn", "Tiếng Anh", "Tiếng Nhật", "Khác"], default="Tiếng Hàn"),
-        "Nghĩa Tiếng Việt (Bạn tự ghi)": st.column_config.TextColumn(),
+# 2. Kho dữ liệu từ vựng (Bạn có thể tự thay đổi hoặc thêm từ mới vào đây thoải mái)
+# Định dạng: "Chữ tiếng nước ngoài": "Nghĩa tiếng việt chuẩn"
+if "kho_tu_vung" not in st.session_state:
+    st.session_state.kho_tu_vung = {
+        "안녕하세요": "xin chào",
+        "감사합니다": "cảm ơn",
+        "사랑해": "yêu",
+        "물": "nước",
+        "사과": "quả táo",
+        "학교": "trường học",
+        "Student": "học sinh",
+        "Teacher": "giáo viên",
+        "Book": "quyển sách"
     }
-)
 
-# 2. Xử lý thống kê số lượng từ đã học ở phía dưới
-if danh_sach_tu is not None and not pd.DataFrame(danh_sach_tu).empty:
-    df_ket_qua = pd.DataFrame(danh_sach_tu)
-    # Đếm số lượng từ hợp lệ
-    tong_so_tu = len(df_ket_qua.dropna(subset=["Từ vựng (Nước Ngoài)"]))
-else:
-    tong_so_tu = 0
+# Khởi tạo các biến lưu trữ trạng thái câu hỏi của trang web
+if "tu_hien_tai" not in st.session_state:
+    st.session_state.tu_hien_tai = random.choice(list(st.session_state.kho_tu_vung.keys()))
+if "diem_so" not in st.session_state:
+    st.session_state.diem_so = 0
+if "thong_bao" not in st.session_state:
+    st.session_state.thong_bao = ""
+
+# 3. Giao diện hiển thị bài kiểm tra
+st.subheader("🎯 Từ vựng cần kiểm tra:")
+st.info(f"Hãy dịch từ này sang tiếng Việt:  👉  **{st.session_state.tu_hien_tai}**")
+
+# Ô nhập câu trả lời của người dùng
+cau_tra_loi = st.text_input("✍️ Nhập nghĩa tiếng Việt của bạn tại đây (Gõ chữ thường):", value="")
+
+# Tạo 2 nút bấm đặt cạnh nhau
+col_nut1, col_nut2 = st.columns(2)
+
+with col_nut1:
+    # NÚT 1: BẤM ĐỂ KIỂM TRA ĐÁP ÁN
+    if st.button("🚀 KIỂM TRA", use_container_width=True):
+        dap_an_dung = st.session_state.kho_tu_vung[st.session_state.tu_hien_tai].strip().lower()
+        if cau_tra_loi.strip().lower() == dap_an_dung:
+            st.session_state.thong_bao = f"🎉 CHÍNH XÁC! Nghĩa của từ '{st.session_state.tu_hien_tai}' đúng là '{dap_an_dung}'."
+            st.session_state.diem_so += 1
+        else:
+            st.session_state.thong_bao = f"❌ SAI RỒI! Đáp án đúng phải là: '{dap_an_dung}'."
+
+with col_nut2:
+    # NÚT 2: ĐỔI SANG TỪ KHÁC
+    if st.button("⏭️ TỪ TIẾP THEO", use_container_width=True):
+        st.session_state.tu_hien_tai = random.choice(list(st.session_state.kho_tu_vung.keys()))
+        st.session_state.thong_bao = ""
+        st.rerun()
+
+# Hiển thị thông báo kết quả Đúng / Sai
+if st.session_state.thong_bao:
+    if "CHÍNH XÁC" in st.session_state.thong_bao:
+        st.success(st.session_state.thong_bao)
+    else:
+        st.error(st.session_state.thong_bao)
 
 st.divider()
-st.metric("📊 TỔNG SỐ TỪ VỰNG BẠN ĐÃ GHI NHỚ:", f"{tong_so_tu} từ")
+# Hiển thị tổng điểm người dùng đạt được
+st.metric("📊 ĐIỂM SỐ HIỆN TẠI CỦA BẠN:", f"{st.session_state.diem_so} Điểm")
